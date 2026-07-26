@@ -299,13 +299,13 @@ UUID_HOMEFS=$(blkid -s UUID -o value "${HOMEDISK}p1")
 
 cat > /mnt/etc/fstab <<EOF
 # <filesystem>     <mountpoint>     <type>  <options>                                       <dump> <pass>
-UUID=$UUID_SYSFS   /                btrfs   noatime,compress=zstd,subvol=@                  0 0
-UUID=$UUID_SYSFS   /.snapshots      btrfs   noatime,compress=zstd,subvol=@snapshots         0 0
-UUID=$UUID_SYSFS   /var/log         btrfs   noatime,compress=zstd,subvol=@var_log           0 0
-UUID=$UUID_SYSFS   /var/cache       btrfs   noatime,compress=zstd,subvol=@var_cache         0 0
-UUID=$UUID_SYSFS   /var/lib/flatpak btrfs   noatime,compress=zstd,subvol=@var_lib_flatpak   0 0
-UUID=$UUID_HOMEFS  /home            btrfs   noatime,compress=zstd,subvol=@home              0 0
-UUID=$UUID_EFI     /boot/efi        vfat    umask=0077                                      0 1
+UUID=$UUID_SYSFS   /mnt                btrfs   noatime,compress=zstd,subvol=@                  0 0
+UUID=$UUID_SYSFS   /mnt/.snapshots      btrfs   noatime,compress=zstd,subvol=@snapshots         0 0
+UUID=$UUID_SYSFS   /mnt/var/log         btrfs   noatime,compress=zstd,subvol=@var_log           0 0
+UUID=$UUID_SYSFS   /mnt/var/cache       btrfs   noatime,compress=zstd,subvol=@var_cache         0 0
+UUID=$UUID_SYSFS   /mnt/var/lib/flatpak btrfs   noatime,compress=zstd,subvol=@var_lib_flatpak   0 0
+UUID=$UUID_HOMEFS  /mnt/home            btrfs   noatime,compress=zstd,subvol=@home              0 0
+UUID=$UUID_EFI     /mnt/boot/efi        vfat    umask=0077                                      0 1
 # /tmp: intentionally absent — Trixie tmpfs default applies
 EOF
 
