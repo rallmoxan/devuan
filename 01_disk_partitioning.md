@@ -33,10 +33,12 @@ subvolume layout, mounted and ready for debootstrap.
 
 ### 3. Subvolumes
 On `system` (mount ${SYS}p2 at /mnt temporarily, create, then umount):
-- `@`           → will be `/`  (contains `/boot` — intentional: snapshots include kernels)
-- `@snapshots`  → will be `/.snapshots`
-- `@var_log`    → will be `/var/log`
-- `@var_cache`  → will be `/var/cache` (keeps apt cache out of snapshots)
+- `@`                → will be `/`  (contains `/boot` — intentional: snapshots include kernels)
+- `@snapshots`       → will be `/.snapshots`
+- `@var_log`         → will be `/var/log`
+- `@var_cache`       → will be `/var/cache` (keeps apt cache out of snapshots)
+- `@var_lib_flatpak` → will be `/var/lib/flatpak` (multi-GB Flatpak apps/runtimes stay
+  out of root snapshots; Flatpak has its own rollback)
 
 On `home` (same dance with ${HOMEDISK}p1):
 - `@home`       → will be `/home`
@@ -44,24 +46,28 @@ On `home` (same dance with ${HOMEDISK}p1):
 Notes:
 - **No `@tmp`** — Trixie mounts /tmp as tmpfs by default; keep it.
 - **No separate /boot partition** — /boot stays inside `@`.
+- Bulk per-app data (Steam's `~/.var/app/com.valvesoftware.Steam`, a `~/Games`
+  library) gets **nested** subvolumes later, on the installed system — nested
+  subvolumes are excluded from `@home` snapshots automatically.
 
 ### 4. Final mount (target = /mnt)
 Mount options everywhere: `noatime,compress=zstd,subvol=<name>`
 (no `discard` — weekly `fstrim.timer` is enabled in step 3 instead).
 
 ```
-mount -o noatime,compress=zstd,subvol=@          ${SYS}p2  /mnt
-mkdir -p /mnt/{.snapshots,var/log,var/cache,boot/efi,home}
-mount -o noatime,compress=zstd,subvol=@snapshots ${SYS}p2  /mnt/.snapshots
-mount -o noatime,compress=zstd,subvol=@var_log   ${SYS}p2  /mnt/var/log
-mount -o noatime,compress=zstd,subvol=@var_cache ${SYS}p2  /mnt/var/cache
-mount -o noatime,compress=zstd,subvol=@home      ${HOMEDISK}p1 /mnt/home
-mount -o umask=0077                              ${SYS}p1      /mnt/boot/efi
+mount -o noatime,compress=zstd,subvol=@ ${SYS}p2 /mnt
+mkdir -p /mnt/{.snapshots,var/log,var/cache,var/lib/flatpak,boot/efi,home}
+mount -o noatime,compress=zstd,subvol=@snapshots       ${SYS}p2      /mnt/.snapshots
+mount -o noatime,compress=zstd,subvol=@var_log         ${SYS}p2      /mnt/var/log
+mount -o noatime,compress=zstd,subvol=@var_cache       ${SYS}p2      /mnt/var/cache
+mount -o noatime,compress=zstd,subvol=@var_lib_flatpak ${SYS}p2      /mnt/var/lib/flatpak
+mount -o noatime,compress=zstd,subvol=@home            ${HOMEDISK}p1 /mnt/home
+mount -o umask=0077                                    ${SYS}p1      /mnt/boot/efi
 ```
 
 ### 5. Verification before step 2
-- `findmnt -R /mnt` matches the table above.
-- `btrfs subvolume list /mnt` shows all 5 subvolumes.
+- `findmnt -R /mnt` matches the table below.
+- `btrfs subvolume list /mnt` shows all 5 system subvolumes (+ `@home` on the home disk).
 - No LVM, no LUKS anywhere (`lsblk` shows plain partitions).
 
 ## Target layout summary
@@ -73,6 +79,7 @@ mount -o umask=0077                              ${SYS}p1      /mnt/boot/efi
 | nvme0n1p2 | Btrfs | @snapshots | /.snapshots | noatime,compress=zstd |
 | nvme0n1p2 | Btrfs | @var_log | /var/log | noatime,compress=zstd |
 | nvme0n1p2 | Btrfs | @var_cache | /var/cache | noatime,compress=zstd |
+| nvme0n1p2 | Btrfs | @var_lib_flatpak | /var/lib/flatpak | noatime,compress=zstd |
 | nvme1n1p1 | Btrfs | @home | /home | noatime,compress=zstd |
 
 (zram swap is configured post-install in step 2 — nothing to do on-disk here.)
