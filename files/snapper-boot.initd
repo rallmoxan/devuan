@@ -1,0 +1,31 @@
+#!/sbin/openrc-run
+# /etc/init.d/snapper-boot
+#
+# snapper paketinin snapper-boot.timer / snapper-boot.service ikilisinin
+# OpenRC karşılığı. Paketin içindeki unit dosyasından alınan komut:
+#   ExecStart=/usr/bin/snapper --config root create \
+#             --cleanup-algorithm number --description "boot"
+#
+# Kurulum:
+#   install -m 755 snapper-boot.initd /etc/init.d/snapper-boot
+#   rc-update add snapper-boot default
+
+name="snapper boot snapshot"
+description="Açılışta kök subvolume'ün anlık görüntüsünü alır"
+
+depend() {
+    need localmount
+    after bootmisc dbus elogind
+}
+
+start() {
+    ebegin "Açılış anlık görüntüsü alınıyor"
+    /usr/bin/snapper --config root create \
+        --cleanup-algorithm number \
+        --description "boot"
+    eend $?
+}
+
+stop() {
+    return 0
+}

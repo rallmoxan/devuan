@@ -1,0 +1,39 @@
+#!/bin/sh
+# /usr/local/sbin/openrc-sync-services
+#
+# Debian'ın openrc paketi update-rc.d / invoke-rc.d'yi SAPTIRMAZ. Sonuç olarak
+# yeni kurulan bir paketin init script'i /etc/rc?.d altında symlink alır ama
+# OpenRC bu dizinleri okumaz — servis açılışta başlamaz.
+#
+# Bu script, openrc postinst'indeki geçiş mantığının aynısını uygular:
+#   /etc/rcS.d/S*  -> sysinit
+#   /etc/rc1.d/S*  -> recovery
+#   /etc/rc2.d/S*  -> default
+#
+# Yeni bir servis paketi kurduktan sonra çalıştırın, ardından `rc-update show`
+# ile sonucu gözden geçirin.
+
+set -e
+
+for rl in S 1 2; do
+    [ -d "/etc/rc${rl}.d" ] || continue
+    case "$rl" in
+        S) orl=sysinit ;;
+        1) orl=recovery ;;
+        2) orl=default ;;
+    esac
+    for f in /etc/rc${rl}.d/S*; do
+        [ -e "$f" ] || continue
+        svc=$(basename "$(readlink -f "$f")")
+        [ -x "/etc/init.d/$svc" ] || continue
+        # NOT: "[ -e ... ] && continue" yazılmamalı — test başarısız olduğunda
+        # liste 1 döndürür ve "set -e" script'i sonlandırır.
+        if [ -e "/etc/runlevels/$orl/$svc" ]; then
+            continue
+        fi
+        echo "  + $svc -> $orl"
+        rc-update add "$svc" "$orl" >/dev/null 2>&1 || true
+    done
+done
+
+rc-update -u

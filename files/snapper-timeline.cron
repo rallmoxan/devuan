@@ -1,0 +1,11 @@
+#!/bin/sh
+# /etc/cron.hourly/snapper-timeline
+#
+# snapper paketindeki snapper-timeline.timer (OnCalendar=hourly) karşılığı.
+# Çağrılan komut, snapper-timeline.service'in ExecStart satırının aynısıdır.
+#
+# NOT: run-parts nokta içeren dosya adlarını yok sayar.
+#      Dosya adı "snapper-timeline" olmalıdır, "snapper.timeline" değil.
+
+[ -x /usr/lib/snapper/systemd-helper ] || exit 0
+exec /usr/lib/snapper/systemd-helper --timeline

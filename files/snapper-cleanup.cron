@@ -1,0 +1,8 @@
+#!/bin/sh
+# /etc/cron.daily/snapper-cleanup
+#
+# snapper paketindeki snapper-cleanup.timer karşılığı.
+# number / timeline / empty-pre-post temizlik algoritmalarını çalıştırır.
+
+[ -x /usr/lib/snapper/systemd-helper ] || exit 0
+exec /usr/lib/snapper/systemd-helper --cleanup

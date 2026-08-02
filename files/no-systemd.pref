@@ -1,0 +1,23 @@
+# /etc/apt/preferences.d/no-systemd.pref
+#
+# Devuan merged deposunda systemd, systemd-sysv ve libpam-systemd zaten YOKTUR
+# (2026-08-02 itibarıyla doğrulandı). Bu pin, sources.list'e yanlışlıkla bir
+# Debian deposu eklenirse devreye giren emniyet kemeridir.
+#
+# UYARI — aşağıdakileri ASLA yasaklamayın:
+#   libsystemd0                    salt kütüphane; pulseaudio, rtkit, util-linux buna bağlı
+#   systemd-standalone-sysusers    "systemd | systemd-sysusers" alternatifini systemd'siz karşılar
+#   udev                           Devuan'da eudev'e bağlı geçiş paketi
+
+Package: systemd systemd-sysv systemd-boot systemd-container systemd-timesyncd systemd-resolved systemd-cron systemd-homed systemd-oomd
+Pin: release *
+Pin-Priority: -1
+
+Package: libpam-systemd
+Pin: release *
+Pin-Priority: -1
+
+# elogind/eudev her zaman Devuan sürümünden gelsin
+Package: elogind libelogind0 libpam-elogind eudev
+Pin: release o=Devuan
+Pin-Priority: 1001

@@ -1,0 +1,37 @@
+#!/sbin/openrc-run
+# /etc/init.d/zramswap
+#
+# zram-tools paketi için OpenRC servisi.
+# Paketin getirdiği /usr/lib/systemd/system/zramswap.service karşılığıdır.
+#
+# zram-tools yalnızca bir systemd unit'i içerir; init script'i yoktur.
+# Ayarlar: /etc/default/zramswap  (ALGO, PERCENT, SIZE, PRIORITY)
+# Kurulum:
+#   install -m 755 zramswap.initd /etc/init.d/zramswap
+#   rc-update add zramswap boot
+
+name="zram swap"
+description="zram üzerinde sıkıştırılmış takas alanı"
+extra_commands="stats"
+
+depend() {
+    need localmount
+    after modules kmod
+    before bootmisc
+}
+
+start() {
+    ebegin "zram takas alanı etkinleştiriliyor"
+    /usr/sbin/zramswap start
+    eend $?
+}
+
+stop() {
+    ebegin "zram takas alanı kapatılıyor"
+    /usr/sbin/zramswap stop
+    eend $?
+}
+
+stats() {
+    /usr/sbin/zramswap status
+}
